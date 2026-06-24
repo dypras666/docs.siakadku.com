@@ -1,68 +1,94 @@
 // API Route untuk dokumen - GET list, POST create
-// Dalam implementasi nyata, terhubung ke database
+// Baca dari JSON file di backend/data/docs.json
 
 import { NextResponse } from "next/server";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import { join } from "path";
 
-// Sample data - dalam implementasi nyata dari database
-let documents = [
-  {
-    id: "1",
-    title: "Perkenalan SIAKADKU",
-    slug: "intro",
-    description: "Kenali Sistem Informasi AkademikKU",
-    content: "# Perkenalan\n\nSIAKADKU adalah...",
-    category: "Pengenalan",
-    status: "published",
-    order: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    title: "Instalasi",
-    slug: "installation",
-    description: "Panduan instalasi SIAKADKU",
-    content: "# Instalasi\n\nLangkah-langkah instalasi...",
-    category: "Pengenalan",
-    status: "published",
-    order: 2,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+interface Doc {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  content: string;
+  description: string;
+  tags?: string[];
+  published?: boolean;
+  order: number;
+  status?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const DATA_FILE = join(process.cwd(), "backend", "data", "docs.json");
+
+function readDocs(): Doc[] {
+  if (!existsSync(DATA_FILE)) return [];
+  const raw = readFileSync(DATA_FILE, "utf-8");
+  return JSON.parse(raw);
+}
+
+function writeDocs(docs: Doc[]): void {
+  writeFileSync(DATA_FILE, JSON.stringify(docs, null, 2), "utf-8");
+}
+
+function toApiFormat(doc: Doc) {
+  return {
+    id: doc.id,
+    slug: doc.slug,
+    title: doc.title,
+    category: doc.category,
+    description: doc.description || "",
+    content: doc.content || "",
+    status: doc.published !== undefined ? (doc.published ? "published" : "draft") : (doc.status || "published"),
+    order: doc.order || 0,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  };
+}
 
 // GET - Ambil semua dokumen
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    data: documents,
-    total: documents.length,
-  });
+  try {
+    const docs = readDocs();
+    const published = docs.filter(d => d.published !== false);
+    return NextResponse.json({
+      success: true,
+      data: published.map(toApiFormat),
+      total: published.length,
+    });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: "Gagal membaca dokumen" }, { status: 500 });
+  }
 }
 
 // POST - Buat dokumen baru
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
-    const newDoc = {
-      id: Date.now().toString(),
-      title: body.title,
+    const docs = readDocs();
+
+    const newDoc: Doc = {
+      id: `doc-${Date.now()}`,
       slug: body.slug,
-      description: body.description || "",
-      content: body.content || "",
+      title: body.title,
       category: body.category || "Uncategorized",
+      content: body.content || "",
+      description: body.description || "",
+      tags: body.tags || [],
+      published: body.published !== undefined ? body.published : (body.status === "published"),
+      order: body.order || docs.length + 1,
       status: body.status || "draft",
-      order: body.order || documents.length + 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    documents.push(newDoc);
+    docs.push(newDoc);
+    writeDocs(docs);
 
     return NextResponse.json({
       success: true,
-      data: newDoc,
+      data: toApiFormat(newDoc),
       message: "Dokumen berhasil dibuat",
     }, { status: 201 });
   } catch (error) {
