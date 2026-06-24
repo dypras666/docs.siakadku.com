@@ -1,0 +1,38 @@
+[
+  {
+    "id": "doc-001",
+    "slug": "autentikasi",
+    "title": "Autentikasi",
+    "category": "Auth",
+    "description": "Endpoint autentikasi untuk login dan verifikasi token JWT.",
+    "order": 1,
+    "published": true,
+    "createdAt": "2026-06-24T00:00:00.000Z",
+    "updatedAt": "2026-06-24T00:00:00.000Z",
+    "content": "# Autentikasi\n\nSemua endpoint yang membutuhkan autentikasi harus menyertakan token JWT di header.\n\n## Header\n\n```\nAuthorization: Bearer <token>\n```\n\n---\n\n## Login\n\n`POST /api/auth/login`\n\n### Request Body\n\n```json\n{\n  \"username\": \"admin\",\n  \"password\": \"password123\"\n}\n```\n\n### Response 200\n\n```json\n{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": \"usr-001\",\n    \"username\": \"admin\",\n    \"role\": \"admin\"\n  }\n}\n```\n\n### Response 401\n\n```json\n{\n  \"error\": \"Invalid credentials\"\n}\n```\n\n---\n\n## Verifikasi Token\n\n`GET /api/auth/me`\n\n### Header\n\n```\nAuthorization: Bearer <token>\n```\n\n### Response 200\n\n```json\n{\n  \"id\": \"usr-001\",\n  \"username\": \"admin\",\n  \"role\": \"admin\"\n}\n```\n\n### Response 403\n\n```json\n{\n  \"error\": \"Invalid token\"\n}\n```\n\n---\n\n## Notes\n\n- Token expires dalam 7 hari\n- Simpan token di localStorage atau cookie\n- Token wajib di-refresh sebelum expiry untuk maintain session"
+  },
+  {
+    "id": "doc-002",
+    "slug": "manajemen-dokumen",
+    "title": "Manajemen Dokumen",
+    "category": "Docs",
+    "description": "CRUD endpoint untuk membuat, edit, dan hapus dokumentasi API.",
+    "order": 2,
+    "published": true,
+    "createdAt": "2026-06-24T00:00:00.000Z",
+    "updatedAt": "2026-06-24T00:00:00.000Z",
+    "content": "# Manajemen Dokumen\n\nDokumen adalah content Markdown yang disimpan dan served via API. Dokumen memiliki slug unik untuk URL, category untuk grouping, dan status published.\n\n## List Dokumen\n\n`GET /api/docs`\n\n### Query Parameters\n\n| Parameter | Tipe | Deskripsi |\n|---|---|---|\n| `category` | string | Filter by category |\n| `search` | string | Search title & description |\n\n### Response 200\n\n```json\n[\n  {\n    \"id\": \"doc-001\",\n    \"slug\": \"autentikasi\",\n    \"title\": \"Autentikasi\",\n    \"category\": \"Auth\",\n    \"description\": \"Endpoint autentikasi...\",\n    \"order\": 1,\n    \"published\": true,\n    \"createdAt\": \"2026-06-24T00:00:00.000Z\",\n    \"updatedAt\": \"2026-06-24T00:00:00.000Z\"\n  }\n]\n```\n\n---\n\n## Get Dokumen by Slug\n\n`GET /api/docs/:slug`\n\n### Response 200\n\n```json\n{\n  \"id\": \"doc-001\",\n  \"slug\": \"autentikasi\",\n  \"title\": \"Autentikasi\",\n  \"category\": \"Auth\",\n  \"content\": \"# Autentikasi\\n\\n...\",\n  \"description\": \"Endpoint autentikasi...\",\n  \"order\": 1,\n  \"published\": true,\n  \"createdAt\": \"2026-06-24T00:00:00.000Z\",\n  \"updatedAt\": \"2026-06-24T00:00:00.000Z\"\n}\n```\n\n### Response 404\n\n```json\n{\n  \"error\": \"Doc not found\"\n}\n```\n\n---\n\n## Search Dokumen\n\n`GET /api/docs/search?q=keyword`\n\nSearch di title, description, dan content. Only published docs.\n\n### Response 200\n\n```json\n[\n  {\n    \"id\": \"doc-001\",\n    \"slug\": \"autentikasi\",\n    \"title\": \"Autentikasi\",\n    ...\n  }\n]\n```\n\n---\n\n## List Categories\n\n`GET /api/categories`\n\nReturns all unique categories from published docs.\n\n### Response 200\n\n```json\n[\"Auth\", \"Docs\", \"Payment\", \"Akademik\"]\n```\n\n---\n\n## Admin: Create Doc\n\n`POST /api/admin/docs`\n\n**Auth: Bearer token (admin/editor)**\n\n### Request Body\n\n```json\n{\n  \"title\": \"Judul Dokumen\",\n  \"slug\": \"judul-dokumen\",\n  \"category\": \"Docs\",\n  \"content\": \"# Judul\\n\\nContent dalam Markdown...\",\n  \"description\": \"Deskripsi singkat\",\n  \"order\": 3,\n  \"published\": false\n}\n```\n\n### Response 201\n\n```json\n{\n  \"id\": \"doc-003\",\n  \"slug\": \"judul-dokumen\",\n  \"title\": \"Judul Dokumen\",\n  ...\n}\n```\n\n---\n\n## Admin: Update Doc\n\n`PUT /api/admin/docs/:id`\n\n**Auth: Bearer token (admin/editor)**\n\n---\n\n## Admin: Delete Doc\n\n`DELETE /api/admin/docs/:id`\n\n**Auth: Bearer token (admin only)**\n\n### Response 200\n\n```json\n{\n  \"success\": true\n}\n```\n\n---\n\n## Admin: Toggle Publish\n\n`PUT /api/admin/docs/:id/publish`\n\n**Auth: Bearer token (admin/editor)**\n\nToggle status published true/false."
+  },
+  {
+    "id": "doc-003",
+    "slug": "api-tripay",
+    "title": "API Tripay Payment Gateway",
+    "category": "Payment",
+    "description": "Integrasi Tripay untuk payment gateway SIAKADKU.",
+    "order": 3,
+    "published": true,
+    "createdAt": "2026-06-24T00:00:00.000Z",
+    "updatedAt": "2026-06-24T00:00:00.000Z",
+    "content": "# Tripay Payment Gateway\n\nTripay adalah payment gateway untuk penerimaan pembayaran mahasiswa. Integrasi dilakukan via callback URL yang dipanggil Tripay saat transaksi berhasil.\n\n## Konfigurasi\n\n| Parameter | Lokasi | Keterangan |\n|---|---|---|\n| `merchant_code` | app/config/tripay.php | Kode merchant dari dashboard Tripay |\n| `api_key` | app/config/tripay.php | API key Tripay |\n| `private_key` | app/config/tripay.php | Private key untuk sign |\n| `callback_url` | Database | `https://siakadku.com/tripay/callback` |\n\n## Callback Endpoint\n\n`POST /tripay/callback`\n\nTripay POST data ini saat payment berhasil.\n\n### Request Body (JSON dari Tripay)\n\n```json\n{\n  \"merchant_ref\": \"TRX-12345\",\n  \"payment_method\": \"BRIVA\",\n  \"status\": \"PAID\",\n  \"amount\": \"500000\",\n  \"fee\": \"5000\",\n  \"signature\": \"abc123...\"\n}\n```\n\n### Processing Steps\n\n1. Verify signature dengan `private_key`\n2. Parse `merchant_ref` → tagihan ID\n3. Update `tagihan_pembayaran.status_pembayaran = 'sukses'`\n4. Update `tagihan_mahasiswa.status_bayar = 'LUNAS'`\n5. Jika modul akuntansi aktif → `Akuntansi_model::posting_pembayaran()`\n6. Return HTTP 200 ke Tripay\n\n## Signature Verification\n\n```php\n$signature = hash('sha256', $merchantCode . $merchantRef . $amount . $apiKey);\nif ($signature !== $callbackData['signature']) {\n    log_message('error', 'Tripay signature mismatch');\n    return false;\n}\n```\n\n## Payment Methods\n\n| Kode | Nama | Tipe |\n|---|---|---|\n| BRIVA | BRI Virtual Account | VA |\n| MANDIRI_VA | Mandiri Virtual Account | VA |\n| BNI_VA | BNI Virtual Account | VA |\n| QRIS | QRIS (Shopee, GoPay, OVO, dll) | QRIS |\n| OVO | OVO | E-Wallet |\n\n## Notes\n\n- Callback URL harus accessible dari internet (port 80/443 open)\n- Tripay retry callback hingga 3x jika tidak dapat response 200\n- Simpan semua callback di log untuk audit trail"
+  }
+]
