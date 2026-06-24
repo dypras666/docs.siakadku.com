@@ -87,7 +87,7 @@ app.use(express.json({ limit: '10mb' }));
 // ============ ROUTES ============
 
 // --- Health Check ---
-app.get('/health', (_req, res) => {
+app.get('/health', (req: any, res: any) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

@@ -13,6 +13,16 @@ const nextConfig = {
       allowedOrigins: ['localhost:3000'],
     },
   },
+
+  // Force no-cache for all pages to prevent stale static HTML
+  headers: async () => [
+    {
+      source: '/(.*)',
+      headers: [
+        { key: 'Cache-Control', value: 'no-store, max-age=0' },
+      ],
+    },
+  ],
 };
 
 export default nextConfig;

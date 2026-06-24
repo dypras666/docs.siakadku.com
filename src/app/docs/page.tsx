@@ -1,52 +1,65 @@
 // Halaman daftar semua dokumen
-// Redirect ke intro atau tampilkan list dokumen
+// Read JSON file directly via fs
 
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, ChevronRight } from "lucide-react";
+import { readFileSync, existsSync } from "fs";
+import { join } from "path";
 
-// Sample data - dalam implementasi nyata dari API/database
-const docsCategories = [
-  {
-    title: "Pengenalan",
-    description: "Kenali SIAKADKU dan mulai menggunakan sistem",
-    docs: [
-      { title: "Perkenalan", slug: "intro" },
-      { title: "Instalasi", slug: "installation" },
-      { title: "Konfigurasi", slug: "configuration" },
-    ],
-  },
-  {
-    title: "Panduan Pengguna",
-    description: "Pelajari cara menggunakan fitur-fitur utama",
-    docs: [
-      { title: "Login & Akses", slug: "login" },
-      { title: "Dashboard", slug: "dashboard" },
-      { title: "Manajemen Mahasiswa", slug: "students" },
-      { title: "Manajemen Dosen", slug: "lecturers" },
-    ],
-  },
-  {
-    title: "Akademik",
-    description: "Kelola data akademik dan nilai",
-    docs: [
-      { title: "Kelola Kelas", slug: "classes" },
-      { title: "Input Nilai", slug: "grades" },
-      { title: "KRS & KHS", slug: "krs-khs" },
-    ],
-  },
-  {
-    title: "Referensi API",
-    description: "Dokumentasi API untuk integrasi",
-    docs: [
-      { title: "Autentikasi API", slug: "api-auth" },
-      { title: "Endpoints", slug: "api-endpoints" },
-      { title: "Error Handling", slug: "api-errors" },
-    ],
-  },
-];
+interface Doc {
+  slug: string;
+  title: string;
+  category: string;
+  description: string;
+  order: number;
+}
 
-export default function DocsIndexPage() {
+const CATEGORY_ORDER = ["Pengenalan", "Flow", "Panduan Pengguna", "Akademik", "Referensi API"];
+
+export const dynamic = "force-dynamic";
+
+function getDocs(): Doc[] {
+  const jsonPath = join(process.cwd(), "backend", "data", "docs.json");
+  if (!existsSync(jsonPath)) return [];
+  try {
+    const raw = readFileSync(jsonPath, "utf-8");
+    const parsed = JSON.parse(raw);
+    // Handle both plain array [] and {data: [...]} formats
+    const arr = Array.isArray(parsed) ? parsed : (parsed.data || []);
+    // No status field in JSON — treat all docs as published
+    return arr.filter((d: any) => !d.status || d.status === "published");
+  } catch {
+    return [];
+  }
+}
+
+export default async function DocsIndexPage() {
+  const docs = getDocs();
+
+  // Group by category
+  const grouped: Record<string, Doc[]> = {};
+  for (const doc of docs) {
+    const cat = doc.category || "Lainnya";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(doc);
+  }
+
+  // Sort within categories
+  for (const cat in grouped) {
+    grouped[cat].sort((a, b) => (a.order || 0) - (b.order || 0));
+  }
+
+  // Order categories
+  const ordered = CATEGORY_ORDER
+    .filter((c) => grouped[c]?.length)
+    .map((c) => ({ title: c, docs: grouped[c] }));
+  for (const cat of Object.keys(grouped).sort()) {
+    if (!CATEGORY_ORDER.includes(cat)) {
+      ordered.push({ title: cat, docs: grouped[cat] });
+    }
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -56,34 +69,40 @@ export default function DocsIndexPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {docsCategories.map((category) => (
-          <Card key={category.title}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                {category.title}
-              </CardTitle>
-              <CardDescription>{category.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {category.docs.map((doc) => (
-                  <li key={doc.slug}>
-                    <Link
-                      href={`/docs/${doc.slug}`}
-                      className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
-                    >
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      {doc.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {ordered.length === 0 ? (
+        <p className="text-muted-foreground">Belum ada dokumentasi.</p>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {ordered.map((category) => (
+            <Card key={category.title}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  {category.title}
+                </CardTitle>
+                <CardDescription>
+                  {category.docs.length} dokumen
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  {category.docs.map((doc) => (
+                    <li key={doc.slug}>
+                      <Link
+                        href={`/docs/${doc.slug}`}
+                        className="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+                      >
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        {doc.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

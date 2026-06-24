@@ -93,7 +93,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
             </div>
           ) : query.length > 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              Tidak ada hasil untuk "{query}"
+              Tidak ada hasil untuk &quot;{query}&quot;
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground">
