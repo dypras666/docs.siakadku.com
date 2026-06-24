@@ -183,7 +183,8 @@ export default async function DocPage({ params }: PageProps) {
 
   function renderInline(text: string): React.ReactNode {
     const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[([^\]]+)\]\(([^)]+)\))/g);
-    return parts.map((part, i) => {
+    // NOTE: re.split with capture groups returns undefined for unmatched groups — must filter
+    return parts.filter(Boolean).map((part, i) => {
       if (part.startsWith("**") && part.endsWith("**")) {
         return <strong key={i}>{part.slice(2, -2)}</strong>;
       }
