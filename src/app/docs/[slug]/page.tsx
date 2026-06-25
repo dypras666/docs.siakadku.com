@@ -129,6 +129,23 @@ export default async function DocPage({ params }: PageProps) {
           </pre>
         );
         i++;
+      } else if (/^!\[.*?\]\(.*?\)$/.test(line.trim())) {
+        // Markdown image: ![alt](url)
+        const match = line.trim().match(/^!\[(.*?)\]\((.*?)\)$/);
+        if (match) {
+          elements.push(
+            <figure key={key++} className="my-6">
+              <img
+                src={match[2]}
+                alt={match[1]}
+                className="max-w-full rounded-lg shadow-sm mx-auto"
+                style={{ maxHeight: '520px', objectFit: 'contain' }}
+              />
+              {match[1] && <figcaption className="text-center text-sm text-muted-foreground mt-2">{match[1]}</figcaption>}
+            </figure>
+          );
+        }
+        i++;
       } else if (line.startsWith("|")) {
         // Table block
         const tableLines: string[] = [];
